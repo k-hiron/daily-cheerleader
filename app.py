@@ -1,6 +1,5 @@
 import streamlit as st
 import datetime
-import time
 import random
 
 # ページの設定
@@ -8,14 +7,12 @@ st.set_page_config(page_title="My Daily Cheerleader", layout="centered")
 
 # --- 200色のパステルカラー背景設定 ---
 if "bg_color" not in st.session_state:
-    st.session_state.bg_color = "#FFF9E3"  # 初期色
+    st.session_state.bg_color = "#FFF9E3"
 
 def change_color():
-    # 200色に近いバリエーションを生むランダムパステルカラー
     r = lambda: random.randint(200, 255)
     st.session_state.bg_color = f'#%02X%02X%02X' % (r(), r(), r())
 
-# 背景色を適用するCSS
 st.markdown(f"""
     <style>
     .stApp {{
@@ -28,14 +25,10 @@ st.markdown(f"""
 # --- メインコンテンツ ---
 st.write(f"<h2 style='text-align: center;'>🌟 My Daily Cheerleader</h2>", unsafe_allow_html=True)
 
-# 時刻と日付の取得
-now = datetime.datetime.now()
-current_time = now.strftime("%H:%M:%S")
-current_date = now.strftime("%Y / %b %d")
-
-# --- スマホ・PC両対応の時刻表示 ---
-st.markdown(f"""
-    <div style="
+# --- ブラウザの現地時刻を表示するJavaScript ---
+# サーバーの時刻ではなく、ユーザーが見ているデバイスの時刻を表示します
+st.markdown("""
+    <div id="clock-container" style="
         border: 5px solid #FFD700; 
         border-radius: 20px; 
         padding: 10px; 
@@ -43,19 +36,35 @@ st.markdown(f"""
         text-align: center;
         background-color: rgba(255, 255, 255, 0.5);
     ">
-        <h1 style="
+        <h1 id="clock" style="
             color: #FF8C00; 
             margin: 0;
             font-size: min(15vw, 90px);
             white-space: nowrap;
             font-family: 'Courier New', Courier, monospace;
         ">
-            {current_time}
+            --:----
         </h1>
+        <h3 id="date" style="color: #555; margin-top: 10px;">---- / -- --</h3>
     </div>
-""", unsafe_allow_html=True)
 
-st.write(f"<h3 style='text-align: center;'>✨ {current_date} ✨</h3>", unsafe_allow_html=True)
+    <script>
+    function updateClock() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        const options = { year: 'numeric', month: 'short', day: '2-digit' };
+        const dateStr = now.toLocaleDateString('en-US', options).replace(',', ' /');
+
+        document.getElementById('clock').textContent = hours + ':' + minutes + ':' + seconds;
+        document.getElementById('date').textContent = '✨ ' + dateStr + ' ✨';
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+    </script>
+""", unsafe_allow_html=True)
 
 # 応援ボタン
 if st.button("✨ Click for your cheer! ✨", on_click=change_color, use_container_width=True):
@@ -68,7 +77,3 @@ if st.button("✨ Click for your cheer! ✨", on_click=change_color, use_contain
         "Keep shining today! (今日も輝き続けよう！)"
     ]
     st.info(random.choice(messages))
-
-# 1秒ごとに更新
-time.sleep(1)
-st.rerun()
