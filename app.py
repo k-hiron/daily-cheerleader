@@ -3,7 +3,7 @@ import datetime
 import random
 import time
 
-# --- 1. ページの設定（タブに表示される名前やアイコン） ---
+# --- 1. ページの設定 ---
 st.set_page_config(page_title="My Daily Cheerleader", page_icon="🌟")
 
 # --- 2. 応援メッセージのリスト ---
@@ -20,36 +20,17 @@ cheers = [
 # --- 3. デザインの調整（CSS） ---
 st.markdown("""
     <style>
-    .main {
-        background-color: #FFF9E3;
-    }
+    .main { background-color: #FFF9E3; }
     .stButton>button {
-        background-color: #FFD700;
-        color: #5C4033;
-        font-weight: bold;
-        border-radius: 20px;
-        border: none;
-        padding: 10px 20px;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-    }
-    .stButton>button:hover {
-        background-color: #FFC400;
-        color: #5C4033;
-    }
-    h1, h2, h3 {
-        color: #D4AF37;
-        text-align: center;
+        background-color: #FFD700; color: #5C4033;
+        font-weight: bold; border-radius: 20px;
     }
     .time-display {
         font-family: 'Courier New', Courier, monospace;
-        font-size: 50px;
-        font-weight: bold;
-        color: #FF8C00;
-        text-align: center;
-        background: #FFFFFF;
-        padding: 10px;
-        border-radius: 15px;
-        border: 3px solid #FFD700;
+        font-size: 50px; font-weight: bold;
+        color: #FF8C00; text-align: center;
+        background: #FFFFFF; padding: 10px;
+        border-radius: 15px; border: 3px solid #FFD700;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -57,27 +38,39 @@ st.markdown("""
 # --- 4. メイン画面の表示 ---
 st.markdown("### 🌟 My Daily Cheerleader")
 
-# 時刻表示用のコンテナ（ここが1秒ごとに書き換わります）
+# 時刻表示用の場所を確保
 time_placeholder = st.empty()
 
-# 日付の表示
+# --- 5. アクセスした人の国の時刻を取得する仕組み ---
+# ブラウザの現在時刻を表示するためのJavaScript
+st.markdown("""
+    <script>
+    function updateClock() {
+        const now = new Date();
+        const timeStr = now.getHours().toString().padStart(2, '0') + ':' +
+                        now.getMinutes().toString().padStart(2, '0') + ':' +
+                        now.getSeconds().toString().padStart(2, '0');
+        // Streamlitの要素に書き込むための処理（簡易版）
+        parent.document.querySelector('.time-display').innerText = timeStr;
+    }
+    setInterval(updateClock, 1000);
+    </script>
+    """, unsafe_allow_html=True)
+
+# --- 6. 日付の表示 (24時間表記対応) ---
 now = datetime.datetime.now()
 st.header(f"✨ {now.strftime('%Y')} ✨")
 st.markdown(f"<h1 style='font-size: 80px; margin: 0;'>{now.strftime('%b %d')}</h1>", unsafe_allow_html=True)
 
+# デジタル時計の初期表示（24時間表記）
+current_time = now.strftime("%H:%M:%S")
+time_placeholder.markdown(f"<div class='time-display'>{current_time}</div>", unsafe_allow_html=True)
+
 st.write("---")
 
-# --- 5. 応援ボタンの機能 ---
+# --- 7. 応援ボタン ---
 if st.button("✨ Click for your cheer! ✨"):
     st.balloons()
-    selected_cheer = random.choice(cheers)
-    st.success(selected_cheer)
+    st.success(random.choice(cheers))
 else:
     st.info("Are you ready to shine today? (さあ、今日も輝く準備はいい？)")
-
-# --- 6. リアルタイム時計の処理（無限ループ） ---
-while True:
-    current_time = datetime.datetime.now().strftime("%H:%M:%S")
-    # プレースホルダーの中身だけを書き換える
-    time_placeholder.markdown(f"<div class='time-display'>{current_time}</div>", unsafe_allow_html=True)
-    time.sleep(1) # 1秒待機
