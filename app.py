@@ -23,18 +23,17 @@ st.markdown(f"""
         transition: background-color 0.5s ease;
     }}
     </style>
-""", unsafe_allow_index=True)
+""", unsafe_allow_html=True)
 
 # --- メインコンテンツ ---
-st.write(f"<h2 style='text-align: center;'>🌟 My Daily Cheerleader</h2>", unsafe_allow_index=True)
+st.write(f"<h2 style='text-align: center;'>🌟 My Daily Cheerleader</h2>", unsafe_allow_html=True)
 
 # 時刻と日付の取得
 now = datetime.datetime.now()
 current_time = now.strftime("%H:%M:%S")
 current_date = now.strftime("%Y / %b %d")
 
-# --- スマホ・PC両対応の時刻表示（ここが重要！） ---
-# font-size: min(15vw, 100px) により、スマホでは自動縮小、PCでは最大100pxになります
+# --- スマホ・PC両対応の時刻表示 ---
 st.markdown(f"""
     <div style="
         border: 5px solid #FFD700; 
@@ -47,16 +46,16 @@ st.markdown(f"""
         <h1 style="
             color: #FF8C00; 
             margin: 0;
-            font-size: min(15vw, 100px);
+            font-size: min(15vw, 90px);
             white-space: nowrap;
             font-family: 'Courier New', Courier, monospace;
         ">
             {current_time}
         </h1>
     </div>
-""", unsafe_allow_index=True)
+""", unsafe_allow_html=True)
 
-st.write(f"<h3 style='text-align: center;'>✨ {current_date} ✨</h3>", unsafe_allow_index=True)
+st.write(f"<h3 style='text-align: center;'>✨ {current_date} ✨</h3>", unsafe_allow_html=True)
 
 # 応援ボタン
 if st.button("✨ Click for your cheer! ✨", on_click=change_color, use_container_width=True):
@@ -70,6 +69,6 @@ if st.button("✨ Click for your cheer! ✨", on_click=change_color, use_contain
     ]
     st.info(random.choice(messages))
 
-# 1秒ごとに更新するための自動リロード（Streamlitの簡易タイマー）
+# 1秒ごとに更新
 time.sleep(1)
 st.rerun()
