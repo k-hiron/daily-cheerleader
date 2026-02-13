@@ -7,8 +7,6 @@ import time
 st.set_page_config(page_title="My Daily Cheerleader", page_icon="🌟")
 
 # --- 2. 応援メッセージのリスト（200種類） ---
-# ここに好きな言葉をどんどん追加してください！
-# 200個並べるのは大変なので、ベースとなるメッセージを用意しました。
 base_cheers = [
     "You are doing an amazing job! (本当によくやってるよ！)",
     "Believe in yourself! (自分を信じて！)",
@@ -19,20 +17,25 @@ base_cheers = [
     "Today is your day! (今日はあなたの特別な日！)",
     "You are a superstar! (あなたはスーパースター！)",
     "Keep going, you're almost there! (その調子！あともう少し！)",
-    "Your smile lights up the world. (あなたの笑顔は世界を照らすよ。)"
+    "Your smile lights up the world. (あなたの笑顔は世界を照らすよ。)",
+    "You've got this! (君ならできる！)",
+    "Stay positive and happy! (前向きに、ハッピーに！)",
+    "You are stronger than you think! (あなたは自分が思うより強いよ！)",
+    "Success is coming to you! (成功はもうすぐそこ！)",
+    "Enjoy every moment! (一瞬一瞬を楽しんで！)"
 ]
-# 200個に満たない場合は、自動でバリエーションを増やして200個にします
-cheers = (base_cheers * 20)[:200] 
+# メッセージを自動で200個に拡張
+cheers = (base_cheers * 14)[:200] 
 
 # --- 3. 200種類のカラーを生成する関数 ---
 def get_random_color():
-    # 明るいパステルカラー（200種類以上の色の組み合わせ）を生成
+    # 明るいパステルカラーをランダム生成
     r = random.randint(200, 255)
     g = random.randint(200, 255)
     b = random.randint(200, 255)
     return f"#{r:02x}{g:02x}{b:02x}"
 
-# 背景色を管理する（ボタンを押すまで色を保持する）
+# 背景色の初期化
 if 'bg_color' not in st.session_state:
     st.session_state.bg_color = "#FFF9E3"
 
@@ -41,14 +44,15 @@ st.markdown(f"""
     <style>
     .stApp {{
         background-color: {st.session_state.bg_color};
-        transition: background-color 0.5s ease; /* 色がふわっと変わるアニメーション */
+        transition: background-color 0.5s ease;
     }}
     .time-display {{
         font-family: 'Courier New', Courier, monospace;
         font-size: 50px; font-weight: bold;
         color: #FF8C00; text-align: center;
         background: rgba(255, 255, 255, 0.8);
-        padding: 10px; border-radius: 15px; border: 3px solid #FFD700;
+        padding: 15px; border-radius: 20px; border: 3px solid #FFD700;
+        margin-bottom: 20px;
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -56,10 +60,10 @@ st.markdown(f"""
 # --- 5. メイン画面の表示 ---
 st.markdown("### 🌟 My Daily Cheerleader")
 
-# 時刻表示用の場所
+# 時刻表示用のコンテナ
 time_placeholder = st.empty()
 
-# JavaScriptで現地時刻を取得（24時間表記）
+# JavaScriptで現地時刻を取得してリアルタイム更新
 st.markdown("""
     <script>
     function updateClock() {
@@ -67,8 +71,8 @@ st.markdown("""
         const timeStr = now.getHours().toString().padStart(2, '0') + ':' +
                         now.getMinutes().toString().padStart(2, '0') + ':' +
                         now.getSeconds().toString().padStart(2, '0');
-        const el = parent.document.querySelector('.time-display');
-        if (el) el.innerText = timeStr;
+        const elements = parent.document.querySelectorAll('.time-display');
+        elements.forEach(el => { el.innerText = timeStr; });
     }
     setInterval(updateClock, 1000);
     </script>
@@ -76,3 +80,22 @@ st.markdown("""
 
 # 日付の表示
 now = datetime.datetime.now()
+st.header(f"✨ {now.strftime('%Y')} ✨")
+st.markdown(f"<h1 style='font-size: 80px; margin: 0; text-align: center;'>{now.strftime('%b %d')}</h1>", unsafe_allow_html=True)
+
+# デジタル時計の表示（JavaScriptが動くまでの初期値）
+time_placeholder.markdown(f"<div class='time-display'>{now.strftime('%H:%M:%S')}</div>", unsafe_allow_html=True)
+
+st.write("---")
+
+# --- 6. 応援ボタン ---
+if st.button("✨ Click for your cheer! ✨", use_container_width=True):
+    # 背景色とメッセージを更新
+    st.session_state.bg_color = get_random_color()
+    st.balloons()
+    selected_cheer = random.choice(cheers)
+    st.success(selected_cheer)
+    # 画面を更新して背景色を反映
+    st.rerun()
+else:
+    st.info("Are you ready to shine today? (さあ、今日も輝く準備はいい？)")
