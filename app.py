@@ -4,7 +4,7 @@ import random
 import time
 from streamlit_javascript import st_javascript
 
-# 1. ページ設定
+# 1. ページ構成
 st.set_page_config(page_title="My Daily Cheerleader", layout="centered")
 
 # 2. セッション状態の初期化
@@ -13,7 +13,7 @@ if "bg_color" not in st.session_state:
 if "current_message" not in st.session_state:
     st.session_state.current_message = "Ready to shine? (さあ、輝く準備はいい？)"
 
-# 200種類用メッセージリスト（日英ペア）
+# メッセージリスト
 base_messages = [
     "You're doing amazing! (最高に輝いてるよ！)",
     "Believe in yourself! (自分を信じて！)",
@@ -38,21 +38,11 @@ base_messages = [
     "Your kindness is a treasure. (あなたの優しさは宝物。)",
     "You've worked so hard. (よく頑張ってるね。)",
     "Treat yourself today. (今日は自分を甘やかして。)",
-    "Future you is cheering for you! (未来のあなたも応援してる。)",
     "Everything's gonna be alright. (大丈夫、すべては上手くいく。)"
 ]
 cheer_pool = (base_messages * 8)[:200]
 
-# --- 💡 【重要】2重表示を防ぐための修正 ---
-# ボタンをクリックした時に実行される関数
-def update_msg():
-    # 背景色をランダムに変更
-    r = lambda: random.randint(200, 255)
-    st.session_state.bg_color = f'#%02X%02X%02X' % (r(), r(), r())
-    # メッセージをランダムに変更
-    st.session_state.current_message = random.choice(cheer_pool)
-
-# 背景色の適用
+# 背景色の適用CSS
 st.markdown(f"""
     <style>
     .stApp {{
@@ -61,6 +51,11 @@ st.markdown(f"""
     }}
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
+    
+    /* 2重表示を絶対に許さないためのCSS設定 */
+    div[data-testid="stMarkdownContainer"] > div.cheer-box:nth-child(n+2) {{
+        display: none !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -68,10 +63,7 @@ st.markdown("<h2 style='text-align: center;'>🌟 My Daily Cheerleader</h2>", un
 
 # 3. 🌍 タイムゾーン自動取得
 tz_offset = st_javascript("""new Date().getTimezoneOffset();""")
-if tz_offset is not None:
-    local_now = datetime.datetime.utcnow() - datetime.timedelta(minutes=tz_offset)
-else:
-    local_now = datetime.datetime.utcnow() + datetime.timedelta(hours=9)
+local_now = datetime.datetime.utcnow() - datetime.timedelta(minutes=(tz_offset if tz_offset else -540))
 
 current_time = local_now.strftime("%H:%M:%S")
 current_date = local_now.strftime("%Y / %b %d")
@@ -85,15 +77,18 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # 4. 応援ボタン
-# ここで `if st.button(...)` の中身を空にすることで、ボタン押下時の追加表示を防ぎます。
-if st.button("✨ Click for your Cheer! ✨", on_click=update_msg, use_container_width=True):
+if st.button("✨ Click for your Cheer! ✨", use_container_width=True):
+    # ボタンが押されたときだけ、セッション状態を直接更新
+    r = lambda: random.randint(200, 255)
+    st.session_state.bg_color = f'#%02X%02X%02X' % (r(), r(), r())
+    st.session_state.current_message = random.choice(cheer_pool)
     st.balloons()
+    # ボタン押下直後の2重描画を防ぐため、即座にリラン
+    st.rerun()
 
-# 5. 【唯一の表示場所】メッセージ表示ボックス
-# この st.empty() と markdown の組み合わせにより、ここ以外に表示されないようにしています。
-msg_placeholder = st.empty()
-msg_placeholder.markdown(f"""
-    <div style="background-color: #ffffff; border-radius: 15px; padding: 20px; text-align: center; font-size: 1.1rem; color: #FF4B4B; border: 2px solid #FF4B4B; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); line-height: 1.6;">
+# 5. 【修正の核心】CSSクラスを付与したメッセージ表示
+st.markdown(f"""
+    <div class="cheer-box" style="background-color: #ffffff; border-radius: 15px; padding: 20px; text-align: center; font-size: 1.1rem; color: #FF4B4B; border: 2px solid #FF4B4B; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); line-height: 1.6;">
         {st.session_state.current_message}
     </div>
 """, unsafe_allow_html=True)
