@@ -4,16 +4,16 @@ import random
 import time
 from streamlit_javascript import st_javascript
 
-# 1. ページの設定（最上部に配置）
+# 1. ページ構成（一番上に配置）
 st.set_page_config(page_title="My Daily Cheerleader", layout="centered")
 
-# 2. セッション状態（データ保持）の初期化
+# 2. セッション状態の初期化
 if "bg_color" not in st.session_state:
     st.session_state.bg_color = "#FFF9E3"
 if "current_message" not in st.session_state:
     st.session_state.current_message = "Ready to shine? (さあ、輝く準備はいい？)"
 
-# 日英ペアの200種類応援メッセージ
+# 日英ペアの応援メッセージリスト
 base_messages = [
     "You're doing amazing! (最高に輝いてるよ！)",
     "Believe in yourself! (自分を信じて！)",
@@ -43,15 +43,15 @@ base_messages = [
 ]
 cheer_pool = (base_messages * 8)[:200]
 
-# 3. 状態を更新する関数（ここだけでデータ処理を行う）
-def update_cheer():
-    # 背景色変更
+# 3. データの更新処理（表示はしない）
+def update_app_state():
+    # 背景色をランダムに変更
     r = lambda: random.randint(200, 255)
     st.session_state.bg_color = f'#%02X%02X%02X' % (r(), r(), r())
-    # メッセージ変更
+    # メッセージをランダムに変更
     st.session_state.current_message = random.choice(cheer_pool)
 
-# 背景色を適用するCSS
+# CSSの適用
 st.markdown(f"""
     <style>
     .stApp {{
@@ -65,11 +65,13 @@ st.markdown(f"""
 
 st.markdown("<h2 style='text-align: center;'>🌟 My Daily Cheerleader</h2>", unsafe_allow_html=True)
 
-# 4. 🌍 自動タイムゾーン取得
+# 4. 🌍 アクセス場所のタイムゾーンを自動取得
 tz_offset = st_javascript("""new Date().getTimezoneOffset();""")
+
 if tz_offset is not None:
     local_now = datetime.datetime.utcnow() - datetime.timedelta(minutes=tz_offset)
 else:
+    # 取得待ちの間は日本時間を表示
     local_now = datetime.datetime.utcnow() + datetime.timedelta(hours=9)
 
 current_time = local_now.strftime("%H:%M:%S")
@@ -103,12 +105,11 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # 5. 応援ボタン
-# 処理（データ変更）は update_cheer 関数に任せ、ここでは表示を行わない
-if st.button("✨ Click for your Cheer! ✨", on_click=update_cheer, use_container_width=True):
+# 処理は update_app_state に任せ、ここでは balloons だけ出す
+if st.button("✨ Click for your Cheer! ✨", on_click=update_app_state, use_container_width=True):
     st.balloons()
 
-# 6. メッセージ表示ボックス
-# ここがアプリ内で「唯一」の表示場所なので、絶対に重なりません
+# 6. メッセージ表示ボックス（ここが唯一の表示場所なので重ならない！）
 st.markdown(f"""
     <div style="
         background-color: #ffffff; 
@@ -126,6 +127,6 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 1秒ごとに更新（時計用）
+# 1秒ごとに自動更新
 time.sleep(1)
 st.rerun()
