@@ -1,94 +1,75 @@
 import streamlit as st
 import datetime
+import time
 import random
 
-# --- 1. ページの設定 ---
-st.set_page_config(page_title="My Daily Cheerleader", page_icon="🌟")
+# ページの設定
+st.set_page_config(page_title="My Daily Cheerleader", layout="centered")
 
-# --- 2. 応援メッセージのリスト（200種類） ---
-base_cheers = [
-    "You're a genius! (天才！)", "Keep shining! (輝き続けて！)", "You've got this! (君ならできる！)",
-    "Believe in you! (自分を信じて！)", "So proud of you! (誇りに思うよ！)", "Victory is yours! (勝利は君の手に！)",
-    "Amazing work! (素晴らしい仕事！)", "You are magic! (君は魔法だ！)", "Stay positive! (前向きにいこう！)",
-    "Love your smile! (笑顔が素敵！)", "Unstoppable! (誰にも止められない！)", "Pure talent! (純粋な才能！)",
-    "Dream big! (大きな夢を！)", "Bravo! (ブラボー！)", "You are enough! (そのままで完璧！)",
-    "Keep growing! (成長し続けよう！)", "Simply the best! (最高だよ！)", "Future looks bright! (未来は明るい！)",
-    "You inspire me! (刺激を受けるよ！)", "Today is special! (今日は特別な日！)"
-]
-cheers = (base_cheers * 10)[:200] 
+# --- 200色のパステルカラー背景設定 ---
+if "bg_color" not in st.session_state:
+    st.session_state.bg_color = "#FFF9E3"  # 初期色
 
-# --- 3. カラー生成 ---
-def get_random_color():
-    return f"#{random.randint(200, 255):02x}{random.randint(200, 255):02x}{random.randint(200, 255):02x}"
+def change_color():
+    # 200色に近いバリエーションを生むランダムパステルカラー
+    r = lambda: random.randint(200, 255)
+    st.session_state.bg_color = f'#%02X%02X%02X' % (r(), r(), r())
 
-if 'bg_color' not in st.session_state:
-    st.session_state.bg_color = "#FFF9E3"
-
-# --- 4. デザイン (CSS) ---
+# 背景色を適用するCSS
 st.markdown(f"""
     <style>
     .stApp {{
         background-color: {st.session_state.bg_color};
         transition: background-color 0.5s ease;
     }}
-    /* 時計の箱をあらかじめ作っておく */
-    .clock-box {{
-        font-family: 'Courier New', Courier, monospace;
-        font-size: 80px; font-weight: bold;
-        color: #FF8C00; text-align: center;
-        background: rgba(255, 255, 255, 0.9);
-        padding: 20px; border-radius: 20px; border: 5px solid #FFD700;
-        margin: 20px auto; width: 80%;
-    }}
-    .date-box {{
-        font-size: 40px; text-align: center; font-weight: bold; color: #5C4033;
-    }}
     </style>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_index=True)
 
-# --- 5. メイン画面の表示 ---
-st.markdown("<h2 style='text-align: center;'>🌟 My Daily Cheerleader</h2>", unsafe_allow_html=True)
+# --- メインコンテンツ ---
+st.write(f"<h2 style='text-align: center;'>🌟 My Daily Cheerleader</h2>", unsafe_allow_index=True)
 
-# HTML要素を配置（ここにJavaScriptで書き込む）
-st.markdown('<div id="my-clock" class="clock-box">--:--:--</div>', unsafe_allow_html=True)
-st.markdown('<div id="my-date" class="date-box">Loading...</div>', unsafe_allow_html=True)
+# 時刻と日付の取得
+now = datetime.datetime.now()
+current_time = now.strftime("%H:%M:%S")
+current_date = now.strftime("%Y / %b %d")
 
-# 🛠 修正版：ブラウザの時間を確実に拾うJavaScript
-st.components.v1.html("""
-    <script>
-    function update() {
-        const now = new Date();
-        
-        // 24時間表記の作成
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        const s = String(now.getSeconds()).padStart(2, '0');
-        const timeStr = h + ':' + m + ':' + s;
-        
-        // 日付の作成
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const dateStr = "✨ " + now.getFullYear() + " ✨<br>" + months[now.getMonth()] + " " + now.getDate();
+# --- スマホ・PC両対応の時刻表示（ここが重要！） ---
+# font-size: min(15vw, 100px) により、スマホでは自動縮小、PCでは最大100pxになります
+st.markdown(f"""
+    <div style="
+        border: 5px solid #FFD700; 
+        border-radius: 20px; 
+        padding: 10px; 
+        margin: 10px 0;
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.5);
+    ">
+        <h1 style="
+            color: #FF8C00; 
+            margin: 0;
+            font-size: min(15vw, 100px);
+            white-space: nowrap;
+            font-family: 'Courier New', Courier, monospace;
+        ">
+            {current_time}
+        </h1>
+    </div>
+""", unsafe_allow_index=True)
 
-        // 親画面（Streamlit）の要素を探して書き換える
-        const clock = window.parent.document.querySelector('#my-clock');
-        const date = window.parent.document.querySelector('#my-date');
-        
-        if (clock) clock.innerText = timeStr;
-        if (date) date.innerHTML = dateStr;
-    }
-    // 0.5秒ごとにチェック（ズレ防止）
-    setInterval(update, 500);
-    update();
-    </script>
-    """, height=0)
+st.write(f"<h3 style='text-align: center;'>✨ {current_date} ✨</h3>", unsafe_allow_index=True)
 
-st.write("---")
-
-# --- 6. 応援ボタン ---
-if st.button("✨ Click for your cheer! ✨", use_container_width=True):
-    st.session_state.bg_color = get_random_color()
+# 応援ボタン
+if st.button("✨ Click for your cheer! ✨", on_click=change_color, use_container_width=True):
     st.balloons()
-    st.success(random.choice(cheers))
-    st.rerun()
-else:
-    st.info("Are you ready to shine today? (さあ、今日も輝く準備はいい？)")
+    messages = [
+        "You're doing amazing! (最高に輝いてるよ！)",
+        "Believe in yourself! (自分を信じて！)",
+        "Every step counts! (一歩一歩が力になるよ！)",
+        "You've got this! (あなたならできる！)",
+        "Keep shining today! (今日も輝き続けよう！)"
+    ]
+    st.info(random.choice(messages))
+
+# 1秒ごとに更新するための自動リロード（Streamlitの簡易タイマー）
+time.sleep(1)
+st.rerun()
