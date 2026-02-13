@@ -4,7 +4,7 @@ import random
 import time
 from streamlit_javascript import st_javascript
 
-# 1. ページ構成（一番上に配置）
+# 1. ページ設定
 st.set_page_config(page_title="My Daily Cheerleader", layout="centered")
 
 # 2. セッション状態の初期化
@@ -13,7 +13,7 @@ if "bg_color" not in st.session_state:
 if "current_message" not in st.session_state:
     st.session_state.current_message = "Ready to shine? (さあ、輝く準備はいい？)"
 
-# 日英ペアの応援メッセージリスト
+# 200種類用メッセージリスト（日英ペア）
 base_messages = [
     "You're doing amazing! (最高に輝いてるよ！)",
     "Believe in yourself! (自分を信じて！)",
@@ -43,15 +43,16 @@ base_messages = [
 ]
 cheer_pool = (base_messages * 8)[:200]
 
-# 3. データの更新処理（表示はしない）
-def update_app_state():
+# --- 💡 【重要】2重表示を防ぐための修正 ---
+# ボタンをクリックした時に実行される関数
+def update_msg():
     # 背景色をランダムに変更
     r = lambda: random.randint(200, 255)
     st.session_state.bg_color = f'#%02X%02X%02X' % (r(), r(), r())
     # メッセージをランダムに変更
     st.session_state.current_message = random.choice(cheer_pool)
 
-# CSSの適用
+# 背景色の適用
 st.markdown(f"""
     <style>
     .stApp {{
@@ -65,68 +66,38 @@ st.markdown(f"""
 
 st.markdown("<h2 style='text-align: center;'>🌟 My Daily Cheerleader</h2>", unsafe_allow_html=True)
 
-# 4. 🌍 アクセス場所のタイムゾーンを自動取得
+# 3. 🌍 タイムゾーン自動取得
 tz_offset = st_javascript("""new Date().getTimezoneOffset();""")
-
 if tz_offset is not None:
     local_now = datetime.datetime.utcnow() - datetime.timedelta(minutes=tz_offset)
 else:
-    # 取得待ちの間は日本時間を表示
     local_now = datetime.datetime.utcnow() + datetime.timedelta(hours=9)
 
 current_time = local_now.strftime("%H:%M:%S")
 current_date = local_now.strftime("%Y / %b %d")
 
-# 時刻表示
+# 時計表示
 st.markdown(f"""
-    <div style="
-        border: 5px solid #FFD700; 
-        border-radius: 25px; 
-        padding: 15px; 
-        margin: 15px 0;
-        text-align: center;
-        background-color: rgba(255, 255, 255, 0.6);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    ">
-        <h1 style="
-            color: #FF8C00; 
-            margin: 0;
-            font-size: min(16vw, 100px);
-            white-space: nowrap;
-            font-family: 'Courier New', Courier, monospace;
-            font-weight: bold;
-        ">
-            {current_time}
-        </h1>
-        <h3 style="color: #666; margin-top: 10px; font-family: sans-serif;">
-            ✨ {current_date} ✨
-        </h3>
+    <div style="border: 5px solid #FFD700; border-radius: 25px; padding: 15px; margin: 15px 0; text-align: center; background-color: rgba(255, 255, 255, 0.6);">
+        <h1 style="color: #FF8C00; margin: 0; font-size: min(16vw, 100px); font-family: 'Courier New', Courier, monospace; font-weight: bold;">{current_time}</h1>
+        <h3 style="color: #666; margin-top: 10px;">✨ {current_date} ✨</h3>
     </div>
 """, unsafe_allow_html=True)
 
-# 5. 応援ボタン
-# 処理は update_app_state に任せ、ここでは balloons だけ出す
-if st.button("✨ Click for your Cheer! ✨", on_click=update_app_state, use_container_width=True):
+# 4. 応援ボタン
+# ここで `if st.button(...)` の中身を空にすることで、ボタン押下時の追加表示を防ぎます。
+if st.button("✨ Click for your Cheer! ✨", on_click=update_msg, use_container_width=True):
     st.balloons()
 
-# 6. メッセージ表示ボックス（ここが唯一の表示場所なので重ならない！）
-st.markdown(f"""
-    <div style="
-        background-color: #ffffff; 
-        border-radius: 15px; 
-        padding: 20px; 
-        text-align: center; 
-        font-size: 1.1rem; 
-        color: #FF4B4B; 
-        border: 2px solid #FF4B4B;
-        margin-top: 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        line-height: 1.6;
-    ">
+# 5. 【唯一の表示場所】メッセージ表示ボックス
+# この st.empty() と markdown の組み合わせにより、ここ以外に表示されないようにしています。
+msg_placeholder = st.empty()
+msg_placeholder.markdown(f"""
+    <div style="background-color: #ffffff; border-radius: 15px; padding: 20px; text-align: center; font-size: 1.1rem; color: #FF4B4B; border: 2px solid #FF4B4B; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); line-height: 1.6;">
         {st.session_state.current_message}
     </div>
 """, unsafe_allow_html=True)
 
-# 1秒ごとに自動更新
+# 6. 自動更新
 time.sleep(1)
 st.rerun()
